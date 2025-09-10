@@ -2,3 +2,5 @@ slurm-*
 *.tsv
 log.*
 **/N_*/*
+*.png
+**/download_results.sh
