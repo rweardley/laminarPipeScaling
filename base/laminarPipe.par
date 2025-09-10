@@ -1,0 +1,31 @@
+[GENERAL]
+polynomialOrder = 1
+
+stopAt = endTime
+endTime = 5
+dt = targetCFL=0.5 + max=0.0025 + initial=1.0e-4  # adaptive timestep
+timeStepper = tombo2
+
+writeControl = simulationTime
+writeInterval = -1
+
+[MESH]
+solver = none
+file = "mesh.re2"
+
+connectivityTol = 0.02
+
+[PRESSURE]
+residualTol = 1e-04
+
+[VELOCITY]
+boundaryTypeMap = inlet, outlet, wall
+viscosity = -100
+density = 1.0
+residualTol = 1e-06
+
+[CASEDATA]
+r_pipe = 0.5      # pipe radius
+u_inflow = 1.0    # inlet mean velocity
+c_x0 = 0.0        # x centre
+c_y0 = 0.0        # y centre
