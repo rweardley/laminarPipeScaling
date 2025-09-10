@@ -86,6 +86,8 @@ files_N4 = [str(rank)+"_ranks/N_4.tsv" for rank in ranks_N4]
 scaling_N4 = Scaling_Case(ranks_N4, 8, files_N4, lelg, 4)
 print(f"\nN=4")
 scaling_N4.scaling_calculations()
+ranks_N4_failed = [8, 12]
+N4_int32_vals = [3.5e9, 2.3e9]
 
 # up to 16 ranks failed due to 32 bit integer error
 ranks_N5 = [24, 32, 40, 48, 56, 64]
@@ -93,27 +95,42 @@ files_N5 = [str(rank)+"_ranks/N_5.tsv" for rank in ranks_N5]
 scaling_N5 = Scaling_Case(ranks_N5, 8, files_N5, lelg, 5)
 print(f"\nN=5")
 scaling_N5.scaling_calculations()
+ranks_N5_failed = [8, 12, 16]
+N5_int32_vals = [5.6e9, 3.7e9, 2.8e9]
 
-# up to 24 ranks failed due to 32 bit integer error
+# 24 ranks failed due to 32 bit integer error
+# didn't run <24 ranks
 ranks_N6 = [32, 40, 48, 56, 64]
 files_N6 = [str(rank)+"_ranks/N_6.tsv" for rank in ranks_N6]
 scaling_N6 = Scaling_Case(ranks_N6, 8, files_N6, lelg, 6)
 print(f"\nN=6")
 scaling_N6.scaling_calculations()
+ranks_N6_failed = [24]
+N6_int32_vals = [2.8e9]
 
 # up to 40 ranks failed due to 32 bit integer error
+# didn't run <24 ranks
 ranks_N7 = [48, 56, 64]
 files_N7 = [str(rank)+"_ranks/N_7.tsv" for rank in ranks_N7]
 scaling_N7 = Scaling_Case(ranks_N7, 8, files_N7, lelg, 7)
 print(f"\nN=7")
 scaling_N7.scaling_calculations()
+ranks_N7_failed = [24, 32, 40]
+N7_int32_vals = [4.0e9, 3.0e9, 2.4e9]
 
 # up to 56 ranks failed due to 32 bit integer error
+# didn't run <24 ranks
 ranks_N8 = [64]
 files_N8 = [str(rank)+"_ranks/N_8.tsv" for rank in ranks_N8]
 scaling_N8 = Scaling_Case(ranks_N8, 8, files_N8, lelg, 8)
 print(f"\nN=8")
 scaling_N8.scaling_calculations()
+ranks_N8_failed = [24, 32, 40, 48, 56]
+N8_int32_vals = [5.6e9, 4.2e9, 3.4e9, 2.8e9, 2.4e9]
+
+ranks_hvt_N2_failed = [32, 64]
+hvt_N2_int32_vals = [8.158e9, 4.08e9]
+
 
 plt.plot(ranks_N3, scaling_N3.time_per_timestep, "x-", label=r"$N=3$")
 plt.plot(ranks_N4, scaling_N4.time_per_timestep, "x-", label=r"$N=4$")
@@ -245,4 +262,56 @@ plt.gca().invert_xaxis()
 plt.ylabel("Parallel Efficiency")
 plt.legend(frameon=False)
 plt.savefig(f"{savedir}/efficiency_qps_gpu.png", bbox_inches="tight")
+plt.close()
+
+polynomialOrders = [4, 5, 6, 7, 8]
+ranks_failed = [ranks_N4_failed, ranks_N5_failed, ranks_N6_failed, ranks_N7_failed, ranks_N8_failed]
+int32_vals = [N4_int32_vals, N5_int32_vals, N6_int32_vals, N7_int32_vals, N8_int32_vals]
+
+for i in range(len(polynomialOrders)):
+    qps_per_rank_failed = [lelg*(polynomialOrders[i])**3 / rank for rank in ranks_failed[i]]
+    plt.plot(qps_per_rank_failed, int32_vals[i], label=rf"$N={polynomialOrders[i]}$")
+qps_per_rank_failed_hvt = [1591954*(2)**3 / rank for rank in ranks_hvt_N2_failed]
+plt.plot(qps_per_rank_failed_hvt, hvt_N2_int32_vals, label=rf"$N=2$ HVT")
+plt.xlabel(r"Quadrature Points per rank ($n=EN^3$)")
+plt.gca().invert_xaxis()
+plt.ylabel("Value exceeding int32 range")
+plt.axhline(2147483647)
+plt.legend(frameon=False)
+plt.savefig(f"{savedir}/qps_per_rank_int32_val.png", bbox_inches="tight")
+plt.close()
+
+for i in range(len(polynomialOrders)):
+    qps_per_rank_failed = [lelg*((polynomialOrders[i])**3) / rank for rank in ranks_failed[i]]
+    func = [int32val/(0.365*qps*lelg/(polynomialOrders[i]**(2/3))) for qps, int32val in zip(qps_per_rank_failed, int32_vals[i])]
+    plt.plot(ranks_failed[i], func, "x-", label=rf"$N={polynomialOrders[i]}$")
+qps_per_rank_failed_hvt = [1591954*(2)**3 / rank for rank in ranks_hvt_N2_failed]
+func = [int32val/(0.365*qps*1591954/(2**(2/3))) for qps, int32val in zip(qps_per_rank_failed_hvt, hvt_N2_int32_vals)]
+plt.plot(ranks_hvt_N2_failed, func, "x-", label=rf"$N=2$ HVT")
+plt.xlabel(r"Ranks")
+plt.ylabel(r"$\frac{int32\_val}{0.365 \times {\rm QPs\_per\_rank} \times {\rm lelg} \times {\rm N}^{-2/3}}$")
+plt.legend(frameon=False)
+plt.savefig(f"{savedir}/qps_per_rank_int32_func1.png", bbox_inches="tight")
+plt.close()
+
+for i in range(len(polynomialOrders)):
+    func = [int32val/(0.365*lelg**2*(polynomialOrders[i]**(3-(2/3)))/rank) for int32val, rank in zip(int32_vals[i], ranks_failed[i])]
+    plt.plot(ranks_failed[i], func, "x-", label=rf"$N={polynomialOrders[i]}$")
+func = [int32val/(0.365*1591954**2*(2**(3-(2/3)))/rank) for int32val, rank in zip(hvt_N2_int32_vals, ranks_hvt_N2_failed)]
+plt.plot(ranks_hvt_N2_failed, func, "x-", label=rf"$N=2$ HVT")
+plt.xlabel(r"Ranks")
+plt.ylabel(r"$int32\_val \div \left(0.365 \times \frac{ {\rm lelg}^2 \times {\rm N}^{3-2/3}}{\rm num\_ranks}\right)$")
+plt.legend(frameon=False)
+plt.savefig(f"{savedir}/qps_per_rank_int32_func2.png", bbox_inches="tight")
+plt.close()
+
+for i in range(len(polynomialOrders)):
+    func = [int32val/(2e4*lelg*(polynomialOrders[i]**(3-(2/3)))/rank) for int32val, rank in zip(int32_vals[i], ranks_failed[i])]
+    plt.plot(ranks_failed[i], func, "x-", label=rf"$N={polynomialOrders[i]}$")
+func = [int32val/(2e4*1591954*(2**(3-(2/3)))/rank) for int32val, rank in zip(hvt_N2_int32_vals, ranks_hvt_N2_failed)]
+plt.plot(ranks_hvt_N2_failed, func, "x-", label=rf"$N=2$ HVT")
+plt.xlabel(r"Ranks")
+plt.ylabel(r"$int32\_val \div \left(2\times10^4 \times \frac{ {\rm lelg} \times {\rm N}^{3-2/3}}{\rm num\_ranks}\right)$")
+plt.legend(frameon=False)
+plt.savefig(f"{savedir}/qps_per_rank_int32_func3.png", bbox_inches="tight")
 plt.close()
