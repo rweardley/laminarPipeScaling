@@ -90,7 +90,7 @@ ranks_N4_failed = [8, 12]
 N4_int32_vals = [3.5e9, 2.3e9]
 
 # up to 16 ranks failed due to 32 bit integer error
-ranks_N5 = [24, 32, 40, 48, 56, 64]
+ranks_N5 = [24, 32, 40, 48, 56, 64, 128]
 files_N5 = [str(rank)+"_ranks/N_5.tsv" for rank in ranks_N5]
 scaling_N5 = Scaling_Case(ranks_N5, 8, files_N5, lelg, 5)
 print(f"\nN=5")
@@ -100,7 +100,7 @@ N5_int32_vals = [5.6e9, 3.7e9, 2.8e9]
 
 # 24 ranks failed due to 32 bit integer error
 # didn't run <24 ranks
-ranks_N6 = [32, 40, 48, 56, 64]
+ranks_N6 = [32, 40, 48, 56, 64, 128]
 files_N6 = [str(rank)+"_ranks/N_6.tsv" for rank in ranks_N6]
 scaling_N6 = Scaling_Case(ranks_N6, 8, files_N6, lelg, 6)
 print(f"\nN=6")
@@ -110,7 +110,7 @@ N6_int32_vals = [2.8e9]
 
 # up to 40 ranks failed due to 32 bit integer error
 # didn't run <24 ranks
-ranks_N7 = [48, 56, 64]
+ranks_N7 = [48, 56, 64, 128]
 files_N7 = [str(rank)+"_ranks/N_7.tsv" for rank in ranks_N7]
 scaling_N7 = Scaling_Case(ranks_N7, 8, files_N7, lelg, 7)
 print(f"\nN=7")
@@ -120,7 +120,7 @@ N7_int32_vals = [4.0e9, 3.0e9, 2.4e9]
 
 # up to 56 ranks failed due to 32 bit integer error
 # didn't run <24 ranks
-ranks_N8 = [64]
+ranks_N8 = [64, 128]
 files_N8 = [str(rank)+"_ranks/N_8.tsv" for rank in ranks_N8]
 scaling_N8 = Scaling_Case(ranks_N8, 8, files_N8, lelg, 8)
 print(f"\nN=8")
@@ -128,6 +128,17 @@ scaling_N8.scaling_calculations()
 ranks_N8_failed = [24, 32, 40, 48, 56]
 N8_int32_vals = [5.6e9, 4.2e9, 3.4e9, 2.8e9, 2.4e9]
 
+# up to 64 ranks failed due to 32 bit integer error
+# didn't run <24 ranks
+ranks_N9 = [128]
+files_N9 = [str(rank)+"_ranks/N_9.tsv" for rank in ranks_N9]
+scaling_N9 = Scaling_Case(ranks_N9, 8, files_N9, lelg, 9)
+print(f"\nN=9")
+scaling_N9.scaling_calculations()
+ranks_N9_failed = [24, 32, 40, 48, 56, 64]
+N9_int32_vals = [7.6e9, 5.7e9, 4.5e9, 3.8e9, 3.3e9, 2.9e9]
+
+# Hypervapotron case
 ranks_hvt_N2_failed = [32, 64]
 hvt_N2_int32_vals = [8.158e9, 4.08e9]
 
@@ -264,9 +275,9 @@ plt.legend(frameon=False)
 plt.savefig(f"{savedir}/efficiency_qps_gpu.png", bbox_inches="tight")
 plt.close()
 
-polynomialOrders = [4, 5, 6, 7, 8]
-ranks_failed = [ranks_N4_failed, ranks_N5_failed, ranks_N6_failed, ranks_N7_failed, ranks_N8_failed]
-int32_vals = [N4_int32_vals, N5_int32_vals, N6_int32_vals, N7_int32_vals, N8_int32_vals]
+polynomialOrders = [4, 5, 6, 7, 8, 9]
+ranks_failed = [ranks_N4_failed, ranks_N5_failed, ranks_N6_failed, ranks_N7_failed, ranks_N8_failed, ranks_N9_failed]
+int32_vals = [N4_int32_vals, N5_int32_vals, N6_int32_vals, N7_int32_vals, N8_int32_vals, N9_int32_vals]
 
 for i in range(len(polynomialOrders)):
     qps_per_rank_failed = [lelg*(polynomialOrders[i])**3 / rank for rank in ranks_failed[i]]
